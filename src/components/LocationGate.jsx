@@ -32,7 +32,7 @@ export default function LocationGate({ children }) {
         try {
           const r = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-            { headers: { 'User-Agent': 'VoyagerApp/1.0' } }
+            { headers: { 'User-Agent': 'TravelBuddyApp/1.0' } }
           );
           const data = await r.json();
           const city = data.address?.city || data.address?.town

@@ -27,7 +27,7 @@ export default function Splash() {
             <div className="logo-icon-lg">
               <Plane size={24} />
             </div>
-            <span>Voyager</span>
+            <span>TravelBuddy</span>
           </div>
           <div className="splash-nav-actions">
             <button className="btn btn-ghost" onClick={() => navigate('/auth')}>Sign in</button>
@@ -50,7 +50,7 @@ export default function Splash() {
               <span className="grad-text-teal">Travel Better.</span>
             </h1>
             <p className="hero-desc">
-              Voyager unifies place discovery, itinerary optimization, and live navigation
+              TravelBuddy unifies place discovery, itinerary optimization, and live navigation
               into one seamless intelligent platform. Say goodbye to switching between 5 apps.
             </p>
             <div className="hero-ctas">

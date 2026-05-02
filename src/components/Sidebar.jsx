@@ -44,7 +44,7 @@ export default function Sidebar() {
               transition={{ duration: 0.2 }}
               className="logo-text"
             >
-              <span className="logo-title">Voyager</span>
+              <span className="logo-title">TravelBuddy</span>
               <span className="logo-sub">AI Travel Planner</span>
             </motion.div>
           )}

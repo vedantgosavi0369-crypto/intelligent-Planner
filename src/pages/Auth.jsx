@@ -101,7 +101,7 @@ export default function Auth() {
             <Plane size={20} />
           </div>
           <div>
-            <h1 className="auth-brand">Voyager</h1>
+            <h1 className="auth-brand">TravelBuddy</h1>
             <p className="auth-tagline">Smart Travel Planner</p>
           </div>
         </div>

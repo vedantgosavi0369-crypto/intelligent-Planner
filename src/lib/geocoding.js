@@ -4,7 +4,7 @@
  */
 
 const NOMINATIM = 'https://nominatim.openstreetmap.org';
-const HEADERS = { 'User-Agent': 'VoyagerTravelApp/1.0' };
+const HEADERS = { 'User-Agent': 'TravelBuddyApp/1.0' };
 
 /* ─── Nominatim implementations ─────────────────────────────── */
 async function nominatimGeocode(address) {
