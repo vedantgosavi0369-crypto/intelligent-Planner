@@ -1,0 +1,253 @@
+.nav-page {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.nav-map {
+  flex: 1;
+  height: 100%;
+}
+
+/* ─── Nav Panel ──────────────────────────────────────── */
+.nav-panel {
+  width: 360px;
+  height: 100%;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nav-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.nav-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ─── Route Stats ────────────────────────────────────── */
+.route-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.route-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ─── Current Waypoint ───────────────────────────────── */
+.current-wp {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border-accent) !important;
+  background: var(--accent-teal-dim) !important;
+}
+
+.wp-nav-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-teal);
+  min-width: 36px;
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+}
+
+.wp-nav-info { flex: 1; }
+
+.wp-nav-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent-teal);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.wp-nav-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wp-nav-dur {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ─── Next Stop ──────────────────────────────────────── */
+.next-wp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.next-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.next-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ─── Waypoint List ──────────────────────────────────── */
+.wp-nav-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.wp-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: left;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.wp-nav-item:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.wp-nav-item.current {
+  background: var(--accent-teal-dim);
+  border-color: rgba(0, 212, 255, 0.2);
+  color: var(--accent-teal);
+}
+
+.wp-nav-item.done { opacity: 0.5; }
+
+.wp-nav-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.wp-nav-item-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* ─── Controls ───────────────────────────────────────── */
+.nav-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.nav-controls .btn { flex: 1; justify-content: center; }
+
+/* ─── Custom map markers ─────────────────────────────── */
+.map-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0a1628, #1a2d50);
+  border: 2px solid var(--accent-teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-teal);
+  font-family: 'Outfit', sans-serif;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+}
+
+.map-marker.active {
+  background: var(--accent-teal);
+  color: #000;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.7);
+  animation: pulse 1.5s ease infinite;
+}
+
+.map-marker.visited {
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+  opacity: 0.7;
+}
+
+.user-location-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #00d4ff;
+  border: 3px solid white;
+  box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.3);
+  animation: pulse 1.5s ease infinite;
+}
+
+/* Leaflet dark popup */
+.leaflet-popup-content-wrapper {
+  background: #0d1629 !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.leaflet-popup-tip { background: #0d1629 !important; }
+.leaflet-popup-close-button { color: var(--text-muted) !important; }
+
+.spin-anim { animation: spin 0.8s linear infinite; }
+
+@media (max-width: 768px) {
+  .nav-page { flex-direction: column; }
+  .nav-map { flex: none; height: 50vh; }
+  .nav-panel { width: 100%; height: 50vh; border-left: none; border-top: 1px solid var(--border); }
+}
