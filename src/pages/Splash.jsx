@@ -25,7 +25,7 @@ export default function Splash() {
         <nav className="splash-nav">
           <div className="splash-logo">
             <div className="logo-icon-lg">
-              <Plane size={24} />
+              <img src="/logo.svg" alt="TravelBuddy Logo" style={{ width: '36px', height: '36px', borderRadius: '6px' }} />
             </div>
             <span>TravelBuddy</span>
           </div>

@@ -25,7 +25,7 @@ export async function getRoute(waypoints, mode = 'driving') {
  * @param {Array} waypoints - [{id, lat, lon, ...}]
  */
 export function optimizeWaypointOrder(waypoints) {
-  if (waypoints.length <= 2) return waypoints;
+  if (waypoints.length < 2) return waypoints;
 
   const remaining = [...waypoints];
   const ordered = [remaining.shift()];

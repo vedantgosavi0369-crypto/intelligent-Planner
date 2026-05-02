@@ -98,7 +98,7 @@ export default function Auth() {
         {/* Logo */}
         <div className="auth-logo">
           <div className="logo-icon">
-            <Plane size={20} />
+            <img src="/logo.svg" alt="TravelBuddy Logo" style={{ width: '32px', height: '32px', borderRadius: '4px' }} />
           </div>
           <div>
             <h1 className="auth-brand">TravelBuddy</h1>

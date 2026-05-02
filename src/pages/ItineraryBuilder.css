@@ -227,6 +227,40 @@
 
 .spin-anim { animation: spin 0.8s linear infinite; }
 
+/* ─── Auto-optimize Active Button ───────────────────────── */
+.btn-optimize-active {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.18), rgba(0, 170, 255, 0.12));
+  border: 1px solid rgba(0, 212, 255, 0.5);
+  color: var(--accent-teal);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.25), inset 0 0 8px rgba(0, 212, 255, 0.05);
+  animation: optimize-pulse 2s ease-in-out infinite;
+}
+
+.btn-optimize-active:hover {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.30), rgba(0, 170, 255, 0.20));
+  box-shadow: 0 0 22px rgba(0, 212, 255, 0.5), inset 0 0 12px rgba(0, 212, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-optimize-active:active {
+  transform: translateY(0);
+}
+
+@keyframes optimize-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 212, 255, 0.25), inset 0 0 8px rgba(0, 212, 255, 0.05); }
+  50%       { box-shadow: 0 0 22px rgba(0, 212, 255, 0.45), inset 0 0 14px rgba(0, 212, 255, 0.10); }
+}
+
 @media (max-width: 900px) {
   .builder-layout { grid-template-columns: 1fr; }
 }

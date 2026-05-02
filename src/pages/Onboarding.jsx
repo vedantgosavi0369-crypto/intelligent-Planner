@@ -157,7 +157,7 @@ export default function Onboarding() {
         {/* Header */}
         <div className="onboarding-header">
           <div className="logo-icon">
-            <Plane size={18} />
+            <img src="/logo.svg" alt="TravelBuddy Logo" style={{ width: '20px', height: '20px', borderRadius: '4px' }} />
           </div>
           <div className="step-indicators">
             {steps.map((_, i) => (

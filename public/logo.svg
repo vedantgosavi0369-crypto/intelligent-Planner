@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Teal background -->
+  <rect width="200" height="200" fill="#00bcd4" rx="16"/>
+
+  <!-- Outer ring -->
+  <circle cx="100" cy="115" r="52" fill="none" stroke="white" stroke-width="4"/>
+
+  <!-- Globe -->
+  <circle cx="100" cy="115" r="40" fill="white"/>
+
+  <!-- Globe continents (simplified) -->
+  <g fill="#00bcd4">
+    <!-- Left continent (Americas-like) -->
+    <path d="M72 100 Q68 95 70 88 Q75 82 80 85 Q85 82 88 88 Q90 95 86 102 Q82 108 76 106 Z"/>
+    <!-- Right continent (Europe/Africa-like) -->
+    <path d="M105 90 Q110 85 116 88 Q120 93 118 100 Q115 108 110 112 Q105 115 102 108 Q100 100 105 90 Z"/>
+    <!-- Small top blob -->
+    <path d="M90 88 Q94 83 100 85 Q103 90 98 93 Q93 91 90 88 Z"/>
+    <!-- Bottom blob -->
+    <path d="M88 118 Q92 115 98 118 Q100 125 95 128 Q89 126 88 118 Z"/>
+  </g>
+
+  <!-- Globe latitude lines -->
+  <g fill="none" stroke="#00bcd4" stroke-width="1.5" opacity="0.5">
+    <line x1="60" y1="115" x2="140" y2="115"/>
+    <path d="M65 100 Q100 95 135 100"/>
+    <path d="M65 130 Q100 135 135 130"/>
+  </g>
+
+  <!-- Globe vertical center line -->
+  <line x1="100" y1="75" x2="100" y2="155" stroke="#00bcd4" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- TRAVELBUDDY arced text -->
+  <defs>
+    <path id="arc" d="M 30,115 A 70,70 0 0,1 170,115"/>
+  </defs>
+  <text font-family="'Arial Black', 'Arial', sans-serif" font-size="19" font-weight="900" fill="white" letter-spacing="2">
+    <textPath href="#arc" startOffset="50%" text-anchor="middle">TRAVELBUDDY</textPath>
+  </text>
+</svg>

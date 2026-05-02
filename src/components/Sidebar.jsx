@@ -33,7 +33,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-icon">
-          <Plane size={20} />
+          <img src="/logo.svg" alt="TravelBuddy Logo" style={{ width: '32px', height: '32px', borderRadius: '4px' }} />
         </div>
         <AnimatePresence>
           {!sidebarCollapsed && (

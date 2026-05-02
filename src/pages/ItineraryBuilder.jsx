@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from '../lib/supabase';
@@ -87,104 +87,189 @@ function TripModal({ onClose, onCreated }) {
   );
 }
 
-function AddWaypointModal({ tripId, onClose, onAdded, savedPlaces }) {
-  const [name, setName] = useState('');
-  const [lat, setLat] = useState('');
-  const [lon, setLon] = useState('');
-  const [duration, setDuration] = useState(60);
+// Geocode via Nominatim
+async function geocodeName(query) {
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`;
+  const r = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+  return r.json();
+}
+
+function AddWaypointModal({ tripId, onClose, onAdded }) {
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [selected, setSelected] = useState(null); // { name, lat, lon }
+  const [loadingSug, setLoadingSug] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [searchLoc, setSearchLoc] = useState('');
+  const [error, setError] = useState('');
+  const sugRef = useRef(null);
+
+  // Debounced autocomplete
+  useEffect(() => {
+    if (query.length < 3) { setSuggestions([]); return; }
+    const timer = setTimeout(async () => {
+      setLoadingSug(true);
+      try {
+        const res = await geocodeName(query);
+        setSuggestions(res.slice(0, 5));
+      } catch { setSuggestions([]); }
+      finally { setLoadingSug(false); }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const pickSuggestion = (s) => {
+    setSelected({ name: s.display_name.split(',').slice(0, 2).join(', '), lat: parseFloat(s.lat), lon: parseFloat(s.lon) });
+    setQuery(s.display_name.split(',').slice(0, 2).join(', '));
+    setSuggestions([]);
+    setError('');
+  };
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (!query.trim()) { setError('Please enter a place name.'); return; }
     setLoading(true);
-    const { data, error } = await supabase.from('waypoints').insert({
-      trip_id: tripId,
-      place_name: name,
-      estimated_duration: `${duration} minutes`,
-      status: 'planned',
-      visit_order: Date.now(),
-      lat: parseFloat(lat) || null,
-      lon: parseFloat(lon) || null,
-    }).select().single();
+    setError('');
 
-    if (error) {
-      console.error("Error adding waypoint:", error);
-      alert("Failed to add stop: " + error.message);
+    // If user typed but didn't pick from dropdown, try to geocode first
+    let lat = selected?.lat ?? null;
+    let lon = selected?.lon ?? null;
+    let name = selected?.name ?? query.trim();
+
+    if (!lat || !lon) {
+      try {
+        const res = await geocodeName(query);
+        if (res.length > 0) {
+          lat = parseFloat(res[0].lat);
+          lon = parseFloat(res[0].lon);
+          name = res[0].display_name.split(',').slice(0, 2).join(', ');
+        }
+      } catch { /* use name without coords */ }
     }
 
-    if (!error) onAdded(data);
+    const { data, error: dbErr } = await supabase.from('waypoints').insert({
+      trip_id: tripId,
+      place_name: name,
+      estimated_duration: null,
+      status: 'planned',
+      visit_order: Math.floor(Date.now() / 1000),
+      lat: lat || null,
+      lon: lon || null,
+    }).select().single();
+
+    if (dbErr) {
+      setError('Failed to add stop: ' + dbErr.message);
+      setLoading(false);
+      return;
+    }
+
+    onAdded(data);
     setLoading(false);
     onClose();
-  };
-
-  const fillFromSaved = (place) => {
-    setName(place.name);
-    const geo = place.geocodes?.main;
-    if (geo) { setLat(geo.latitude); setLon(geo.longitude); }
   };
 
   return (
     <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
       <motion.div
         className="trip-modal glass"
-        style={{ maxWidth: 520 }}
+        style={{ maxWidth: 460 }}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         onClick={e => e.stopPropagation()}
       >
         <div className="modal-header" style={{ marginBottom: 20 }}>
-          <h2>Add Waypoint</h2>
+          <h2>Add Stop</h2>
           <button className="btn btn-ghost" onClick={onClose}><X size={18} /></button>
         </div>
 
-        {savedPlaces.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>
-              <Heart size={12} style={{ display: 'inline', marginRight: 4 }} />
-              Add from saved places:
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {savedPlaces.map(p => (
-                <button
-                  key={p.fsq_id}
-                  className="btn btn-secondary"
-                  style={{ fontSize: 12, padding: '5px 12px' }}
-                  onClick={() => fillFromSaved(p)}
-                >
-                  {p.name}
-                </button>
-              ))}
-            </div>
-            <div className="divider" style={{ margin: '16px 0' }} />
-          </div>
-        )}
-
-        <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="input-group">
+        <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 14 }} ref={sugRef}>
+          <div className="input-group" style={{ position: 'relative' }}>
             <label>Place Name</label>
-            <input className="input" placeholder="e.g., Eiffel Tower" value={name} onChange={e => setName(e.target.value)} required />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <div className="input-group">
-              <label>Latitude (optional)</label>
-              <input className="input" type="number" step="any" placeholder="48.8584" value={lat} onChange={e => setLat(e.target.value)} />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <MapPin size={15} style={{ position: 'absolute', left: 12, color: 'var(--accent-teal)', pointerEvents: 'none' }} />
+              <input
+                className="input"
+                style={{ paddingLeft: 34 }}
+                placeholder="Search any place — e.g., Shaniwar Wada"
+                value={query}
+                autoFocus
+                onChange={e => { setQuery(e.target.value); setSelected(null); }}
+                required
+              />
+              {loadingSug && <Loader2 size={14} className="spin-anim" style={{ position: 'absolute', right: 12, color: 'var(--text-muted)' }} />}
+              {query && !loadingSug && (
+                <button type="button" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
+                  onClick={() => { setQuery(''); setSelected(null); setSuggestions([]); }}>
+                  <X size={14} />
+                </button>
+              )}
             </div>
-            <div className="input-group">
-              <label>Longitude (optional)</label>
-              <input className="input" type="number" step="any" placeholder="2.2945" value={lon} onChange={e => setLon(e.target.value)} />
-            </div>
+
+            {/* Autocomplete dropdown */}
+            <AnimatePresence>
+              {suggestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    borderRadius: 8, marginTop: 4, overflow: 'hidden',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => pickSuggestion(s)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'flex-start', gap: 8,
+                        padding: '10px 14px', background: 'none', border: 'none',
+                        borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                        color: 'var(--text-secondary)', fontSize: 12, textAlign: 'left',
+                        cursor: 'pointer', transition: 'background 0.15s',
+                        lineHeight: 1.4,
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,212,255,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                    >
+                      <MapPin size={12} style={{ color: 'var(--accent-teal)', flexShrink: 0, marginTop: 2 }} />
+                      <span>{s.display_name.split(',').slice(0, 3).join(', ')}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          <div className="input-group">
-            <label>Estimated Visit Duration (minutes): {duration}</label>
-            <input type="range" min={15} max={480} step={15} value={duration} onChange={e => setDuration(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--accent-teal)' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              <span>15 min</span><span>8 hrs</span>
+
+          {/* Selected badge */}
+          {selected && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+              background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.25)',
+              borderRadius: 8, fontSize: 12, color: 'var(--accent-teal)',
+            }}>
+              <Zap size={13} />
+              Geocoded: {selected.lat.toFixed(4)}, {selected.lon.toFixed(4)}
             </div>
+          )}
+
+          {error && (
+            <div style={{ fontSize: 12, color: '#ef4444', padding: '8px 12px', background: 'rgba(239,68,68,0.1)', borderRadius: 8 }}>{error}</div>
+          )}
+
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+            background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+            borderRadius: 8, fontSize: 12, color: '#22c55e',
+          }}>
+            <Zap size={13} /> Auto-optimize will run after adding
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+
+          <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: 4 }}>
             {loading ? <Loader2 size={16} className="spin-anim" /> : <Plus size={16} />}
-            Add Waypoint
+            Add Stop
           </button>
         </form>
       </motion.div>
@@ -199,6 +284,7 @@ export default function ItineraryBuilder() {
   const [loading, setLoading] = useState(false);
   const [transport, setTransport] = useState('driving');
   const [optimizing, setOptimizing] = useState(false);
+  const [optimizeStatus, setOptimizeStatus] = useState('');
 
   useEffect(() => {
     fetchTrips();
@@ -246,15 +332,51 @@ export default function ItineraryBuilder() {
   };
 
   const handleOptimize = async () => {
-    if (waypoints.length < 3) return;
+    if (waypoints.length < 2) return;
     setOptimizing(true);
-    const wpsWithCoords = waypoints.filter(w => w.lat && w.lon);
-    if (wpsWithCoords.length < 2) { setOptimizing(false); return; }
+
+    // Helper: delay to respect Nominatim's 1-req/sec rate limit
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+    // Geocode SEQUENTIALLY — parallel requests get rate-limited by Nominatim
+    const enriched = [];
+    for (const w of waypoints) {
+      if (w.lat && w.lon && !isNaN(parseFloat(w.lat)) && !isNaN(parseFloat(w.lon))) {
+        enriched.push({ ...w, lat: parseFloat(w.lat), lon: parseFloat(w.lon) });
+      } else {
+        // Geocode this stop and wait before the next request
+        try {
+          const res = await geocodeName(w.place_name);
+          if (res && res.length > 0) {
+            const lat = parseFloat(res[0].lat);
+            const lon = parseFloat(res[0].lon);
+            // Save coords to DB so next optimize is instant
+            await supabase.from('waypoints').update({ lat, lon }).eq('id', w.id);
+            enriched.push({ ...w, lat, lon });
+          } else {
+            enriched.push({ ...w, lat: null, lon: null });
+          }
+        } catch {
+          enriched.push({ ...w, lat: null, lon: null });
+        }
+        await delay(400); // Respect Nominatim rate-limit
+      }
+    }
+
+    const wpsWithCoords = enriched.filter(w => w.lat !== null && w.lon !== null && !isNaN(w.lat) && !isNaN(w.lon));
+    const noCoords = enriched.filter(w => w.lat === null || w.lon === null || isNaN(w.lat) || isNaN(w.lon));
+
+    if (wpsWithCoords.length < 2) {
+      setOptimizing(false);
+      setOptimizeStatus('⚠️ Could not resolve enough locations. Try searching by city name.');
+      setTimeout(() => setOptimizeStatus(''), 4000);
+      return;
+    }
 
     const optimized = optimizeWaypointOrder(wpsWithCoords);
     const updatedFull = [
       ...optimized.map((wp, i) => ({ ...wp, visit_order: i + 1 })),
-      ...waypoints.filter(w => !w.lat || !w.lon).map((wp, i) => ({ ...wp, visit_order: optimized.length + i + 1 })),
+      ...noCoords.map((wp, i) => ({ ...wp, visit_order: optimized.length + i + 1 })),
     ];
     setWaypoints(updatedFull);
     await Promise.all(
@@ -263,10 +385,33 @@ export default function ItineraryBuilder() {
       )
     );
     setOptimizing(false);
+    setOptimizeStatus('✅ Route optimized for shortest distance!');
+    setTimeout(() => setOptimizeStatus(''), 3000);
   };
 
-  const handleWaypointAdded = (wp) => {
-    setWaypoints([...waypoints, wp]);
+  const handleWaypointAdded = async (wp) => {
+    const newList = [...waypoints, wp];
+    setWaypoints(newList);
+    // Auto-optimize whenever there are 2+ stops with coords
+    const wpsWithCoords = newList
+      .map(w => ({ ...w, lat: parseFloat(w.lat), lon: parseFloat(w.lon) }))
+      .filter(w => !isNaN(w.lat) && !isNaN(w.lon));
+    if (wpsWithCoords.length >= 2) {
+      setOptimizing(true);
+      const optimized = optimizeWaypointOrder(wpsWithCoords);
+      const noCoords = newList.filter(w => !w.lat || !w.lon);
+      const updatedFull = [
+        ...optimized.map((w, i) => ({ ...w, visit_order: i + 1 })),
+        ...noCoords.map((w, i) => ({ ...w, visit_order: optimized.length + i + 1 })),
+      ];
+      setWaypoints(updatedFull);
+      await Promise.all(
+        updatedFull.map(w =>
+          supabase.from('waypoints').update({ visit_order: w.visit_order }).eq('id', w.id)
+        )
+      );
+      setOptimizing(false);
+    }
   };
 
   const visited = waypoints.filter(w => w.status === 'visited').length;
@@ -351,18 +496,38 @@ export default function ItineraryBuilder() {
                     ))}
                   </div>
                   <button
-                    className="btn btn-secondary"
+                    className={`btn ${ !optimizing && waypoints.length >= 2 ? 'btn-optimize-active' : 'btn-secondary' }`}
                     onClick={handleOptimize}
-                    disabled={optimizing || waypoints.length < 3}
+                    disabled={optimizing || waypoints.length < 2}
+                    title={waypoints.length < 2 ? 'Add at least 2 stops to optimize' : 'Re-order stops for shortest route'}
                   >
                     {optimizing ? <Loader2 size={14} className="spin-anim" /> : <Zap size={14} />}
-                    Auto-optimize
+                    {optimizing ? 'Optimizing…' : 'Auto-optimize'}
                   </button>
                   <button className="btn btn-primary" onClick={() => setShowWpModal(true)}>
                     <Plus size={14} /> Add Stop
                   </button>
                 </div>
               </div>
+
+              {/* Optimize status toast */}
+              {optimizeStatus && (
+                <div style={{
+                  padding: '10px 16px',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  marginBottom: 4,
+                  background: optimizeStatus.startsWith('✅')
+                    ? 'rgba(16,185,129,0.12)'
+                    : 'rgba(245,158,11,0.12)',
+                  border: `1px solid ${optimizeStatus.startsWith('✅') ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                  color: optimizeStatus.startsWith('✅') ? '#34d399' : '#fbbf24',
+                  transition: 'all 0.3s ease',
+                }}>
+                  {optimizeStatus}
+                </div>
+              )}
 
               {/* Progress bar */}
               {waypoints.length > 0 && (
@@ -457,7 +622,6 @@ export default function ItineraryBuilder() {
             tripId={activeTrip.id}
             onClose={() => setShowWpModal(false)}
             onAdded={handleWaypointAdded}
-            savedPlaces={savedPlaces}
           />
         )}
       </AnimatePresence>
