@@ -24,6 +24,9 @@ const OSM_FILTERS = {
   '13000': [ // Food & Drink
     `node["amenity"~"restaurant|cafe|bar|fast_food|pub|food_court|ice_cream"]["name"]`,
   ],
+  '19014': [ // Hotels
+    `node["tourism"~"hotel|motel|hostel|guest_house|resort"]["name"]`,
+  ],
   '16032': [ // Museums
     `node["tourism"~"museum|gallery"]["name"]`,
   ],

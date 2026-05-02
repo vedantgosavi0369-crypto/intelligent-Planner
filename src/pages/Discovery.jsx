@@ -14,6 +14,7 @@ const CATEGORIES = [
   { id: '', label: 'All', query: '' },
   { id: '16000', label: 'Landmarks', query: 'landmarks' },
   { id: '13000', label: 'Food & Drink', query: 'restaurants' },
+  { id: '19014', label: 'Hotels', query: 'hotels' },
   { id: '16032', label: 'Museums', query: 'museums' },
   { id: '16019', label: 'Nature', query: 'parks' },
   { id: '10000', label: 'Arts', query: 'art' },
